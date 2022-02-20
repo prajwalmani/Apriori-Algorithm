@@ -2,7 +2,7 @@
 # sample transcation dataset from https://www.geeksforgeeks.org/apriori-algorithm/
 
 
-from cmath import sin
+from ast import Break
 from itertools import combinations,permutations
 from msilib.schema import DuplicateFile
 
@@ -20,6 +20,7 @@ transcations={
 
 min_support_value=2
 min_confidence_value=50
+confidence_values=[]
 
 def generate_support(transcations,flag,trimmed_support):
     support={}
@@ -37,7 +38,7 @@ def generate_support(transcations,flag,trimmed_support):
                                 temp_item_support+=1
                                 support[i]=temp_item_support
                 values.append(i)
-    if flag>=2:
+    if flag>=1:
         support={}
         for i in trimmed_support:
                 if not isinstance(i, tuple):
@@ -94,6 +95,7 @@ def singlesupport(supportitem):
 
 def confidence(trimmed_support):
     confid={}
+    confidence_values.clear()
     for i in trimmed_support.keys():
         i=list(i)
         perm=list(permutations(i))
@@ -110,17 +112,60 @@ def confidence(trimmed_support):
                 confidence_value=(unionupport/RHSsupport)*100
                 if confidence_value>=min_confidence_value:
                     confid[str(j_duplicate)]=str(j[k:])
+                    confidence_values.append(confidence_value)
+    return confid
 
-    
+def getuniqeueelementslength(transcations):
+    unique=[]
+    for inkey,invalue in transcations.items():
+        for items in invalue:
+            if items not in unique:
+                unique.append(items)
+    return len(unique)
 
-ts=combination(trim_support(generate_support(transcations=transcations,flag=1,trimmed_support=0)),combination_flag=2)
-ts1=combination(trim_support(generate_support(transcations=transcations,flag=2,trimmed_support=ts)),combination_flag=3)
-ts2=combination(trim_support(generate_support(transcations=transcations,flag=3,trimmed_support=ts1)),combination_flag=4)
-ts3=combination(trim_support(generate_support(transcations=transcations,flag=3,trimmed_support=ts2)),combination_flag=4)
-# ts1=trim_support(generate_support(transcations=transcations,flag=2,trimmed_support=ts))
-# conf=confidence(generate_support(transcations=transcations,flag=2,trimmed_support=ts))
-confidence(trim_support(generate_support(transcations=transcations,flag=2,trimmed_support=ts1)))
-# print(conf)
+def call_functions(transcations):
+    count=0 
+    combination_list=[]
+    confidences={}
+    uniqueelements=getuniqeueelementslength(transcations)
+    for i in range(uniqueelements):
+        if count==0:
+            trimmed=trim_support(generate_support(
+                transcations=transcations,
+                flag=i,
+                trimmed_support=0
+            ))
+            comb=combination(trimmed,combination_flag=i+2)
+            combination_list.append(comb)
+        else:
+            trimmed=trim_support(generate_support(
+                transcations=transcations,
+                flag=i,
+                trimmed_support=combination_list[0]
+            ))
+            comb=combination(trimmed,combination_flag=i+2)
+            combination_list.clear()
+            combination_list.append(comb)
+            confidences=confidence(trimmed)
+            if bool(confidences)==False:
+                print("Thats all the transcations")
+                break
+            for key,value in confidences.items():
+                index=list(confidences.keys()).index(key)
+                print("{}->{}:{}%".format(key,value,round(confidence_values[index],2)))
+        count+=1
+
+call_functions(transcations)
+
+# ts=combination(trim_support(generate_support(transcations=transcations,flag=0,trimmed_support=0)),combination_flag=2)
+# ts1=combination(trim_support(generate_support(transcations=transcations,flag=2,trimmed_support=ts)),combination_flag=3)
+# ts2=combination(trim_support(generate_support(transcations=transcations,flag=3,trimmed_support=ts1)),combination_flag=4)
+# ts3=combination(trim_support(generate_support(transcations=transcations,flag=3,trimmed_support=ts2)),combination_flag=4)
+# # ts1=trim_support(generate_support(transcations=transcations,flag=2,trimmed_support=ts))
+# # conf=confidence(generate_support(transcations=transcations,flag=2,trimmed_support=ts))
+# confidence(trim_support(generate_support(transcations=transcations,flag=2,trimmed_support=ts1)))
+# print(generate_support(transcations=transcations,flag=1,trimmed_support=0))
+# print(ts)
 
 
   
