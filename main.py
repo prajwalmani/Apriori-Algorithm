@@ -1,25 +1,18 @@
-
-# sample transcation dataset from https://www.geeksforgeeks.org/apriori-algorithm/
-
-
-from ast import Break
 from itertools import combinations,permutations
-from msilib.schema import DuplicateFile
+import sqlite3
+
 
 transcations={
-    't1':['i1','i2','i5'],
-    't2':['i2','i4'],
-    't3':['i2','i3'],
-    't4':['i1','i2','i4'],
-    't5':['i1','i3'],
-    't6':['i2','i3'],
-    't7':['i1','i3'],
-    't8':['i1','i2','i3','i5'],
-    't9':['i1','i2','i3']
+    't1':['beer', 'bread', 'umbrella'],
+    't2':['milk', 'bread', 'detergent', 'water', 'umbrella', 'cheese'],
+    't3':["diaper", "water"],
+    't4':['cheese', 'water', 'milk', 'beer', 'detergent'],
+    't5':['bread', 'water', 'cheese', 'detergent']    
+
 }
 
 min_support_value=2
-min_confidence_value=50
+min_confidence_value=70
 confidence_values=[]
 
 def generate_support(transcations,flag,trimmed_support):
@@ -152,20 +145,13 @@ def call_functions(transcations):
                 break
             for key,value in confidences.items():
                 index=list(confidences.keys()).index(key)
-                print("{}->{}:{}%".format(key,value,round(confidence_values[index],2)))
+                print("{}=>{}:{}%".format(key,value,round(confidence_values[index],2)))
         count+=1
 
-call_functions(transcations)
+# call_functions(transcations)
 
-# ts=combination(trim_support(generate_support(transcations=transcations,flag=0,trimmed_support=0)),combination_flag=2)
-# ts1=combination(trim_support(generate_support(transcations=transcations,flag=2,trimmed_support=ts)),combination_flag=3)
-# ts2=combination(trim_support(generate_support(transcations=transcations,flag=3,trimmed_support=ts1)),combination_flag=4)
-# ts3=combination(trim_support(generate_support(transcations=transcations,flag=3,trimmed_support=ts2)),combination_flag=4)
-# # ts1=trim_support(generate_support(transcations=transcations,flag=2,trimmed_support=ts))
-# # conf=confidence(generate_support(transcations=transcations,flag=2,trimmed_support=ts))
-# confidence(trim_support(generate_support(transcations=transcations,flag=2,trimmed_support=ts1)))
-# print(generate_support(transcations=transcations,flag=1,trimmed_support=0))
-# print(ts)
+def database():
+    con = sqlite3.connect('example.db')
 
 
   
