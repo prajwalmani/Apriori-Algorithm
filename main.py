@@ -1,5 +1,7 @@
 from itertools import combinations,permutations
 import sqlite3
+import time
+
 
 confidence_values=[]
 supports=[]
@@ -37,7 +39,7 @@ def generate_support(transcations,flag,trimmed_support):
     printsupportvalue(support,flag,len(transcations))
     return support
 
-def trim_support(support):
+def trim_support(support,min_support_value):
     trim_support={}
     for key,value in support.items():
         if support[key]  >= min_support_value:
@@ -58,7 +60,7 @@ def combination(trim_support,combination_flag):
         combination_list=[",".join(map(str, comb)) for comb in combinations(keys, combination_flag)]
         return (combination_list)
 
-def singlesupport(supportitem):
+def singlesupport(supportitem,transcations):
         support={}
         if not isinstance(supportitem, tuple):
             supportitem=tuple(supportitem)
@@ -76,7 +78,7 @@ def singlesupport(supportitem):
         return singlesupports
         
 
-def confidence(trimmed_support):
+def confidence(trimmed_support,min_confidence_value,transcations,conifdence_flag):
     confid={}
     confidence_values.clear()
     supports.clear()
@@ -91,11 +93,15 @@ def confidence(trimmed_support):
                 j_remove=j[k:]
                 for l in j_remove:
                     j_duplicate.remove(l)
-                unionupport=float((singlesupport(j)))
-                RHSsupport=float((singlesupport(j_duplicate)))
+                unionupport=float((singlesupport(j,transcations)))
+                RHSsupport=float((singlesupport(j_duplicate,transcations)))
                 confidence_value=(unionupport/RHSsupport)*100
-
-                if confidence_value>=min_confidence_value:
+                if(conifdence_flag==1):
+                    if confidence_value>=min_confidence_value:
+                        supports.append(j_duplicate+j[k:])
+                        confid[str(j_duplicate)]=str(j[k:])
+                        confidence_values.append(confidence_value)
+                else:
                     supports.append(j_duplicate+j[k:])
                     confid[str(j_duplicate)]=str(j[k:])
                     confidence_values.append(confidence_value)
@@ -109,7 +115,7 @@ def getuniqeueelementslength(transcations):
                 unique.append(items)
     return len(unique)
 
-def call_functions(transcations):
+def apriori_functions(transcations,min_support_value,min_confidence_value):
     count=0 
     combination_list=[]
     confidences={}
@@ -121,7 +127,7 @@ def call_functions(transcations):
                 transcations=transcations,
                 flag=i,
                 trimmed_support=0
-            ))
+            ),min_support_value)
             
             comb=combination(trimmed,combination_flag=i+2)
             combination_list.append(comb)
@@ -130,11 +136,11 @@ def call_functions(transcations):
                 transcations=transcations,
                 flag=i,
                 trimmed_support=combination_list[0]
-            ))
+            ),min_support_value)
             comb=combination(trimmed,combination_flag=i+2)
             combination_list.clear()
             combination_list.append(comb)
-            confidences=confidence(trimmed)
+            confidences=confidence(trimmed,min_confidence_value,transcations,conifdence_flag=1)
             if bool(confidences)==False:
                 print("-----------------------------------------------------------")
                 print("There is no more frequent item set/assocation rules which is above the \nminumum supoort and confidence threshold")
@@ -143,7 +149,7 @@ def call_functions(transcations):
             print("\nAssocation rules:")
             values_support.clear()
             for items in supports:
-                values_support.append(singlesupport(items)*100)
+                values_support.append(singlesupport(items,transcations)*100)
             for key,value in confidences.items():
                 index=list(confidences.keys()).index(key)
                 print("{}=>{}:[Support:{}%, Confidence:{}%]".format(key,value,round(values_support[index],2),round(confidence_values[index],2)))
@@ -183,18 +189,75 @@ def printsupportvalue(support,buff,lentranscations):
         print("{}:{}%".format(key,round((value/lentranscations)*100),2))
         
 
+def apriori():
+    print("Apriori Algorthim method:")
+    min_support_value=(int(input("Enter the minimum support in percentage:")))
+    min_confidence_value=int(input("Enter the minimum support confidence in percentage:"))
+    for i in range(1,6):
+        transcations=database(str(i))
+        min_support_value=(min_support_value/100)*len(transcations)
+        apriori_functions(transcations,min_support_value,min_confidence_value) 
 
-print("Apriori Algorthim")
-print("Databases List")
-print("1.Games\n2.Mangas\n3.Basic necessities\n4.Vegetables\n5.Fruits\n")
-database_number=int(input("Enter your selection:"))
-if database_number<=0 or database_number>5:
-    print("Please enter the proper number associated to the database list")
-    database_number=int(input("Enter your selection:"))
+def assocation_rules_bruteforce(trimmed_support):
+    for i in trimmed_support.keys():
+        i=list(i)
+        perm=list(permutations(i))
+        for j in list(perm):
+            len_j=len(j)
+            for k in range(1,len_j):
+                j=list(j)
+                j_duplicate=list(j)
+                j_remove=j[k:]
+                for l in j_remove:
+                    j_duplicate.remove(l)
+                    print("{}=>{}".format(j_duplicate,j[k:]))
+    
 
-transcations=database(str(database_number))
-min_support_value=((int(input("Enter the minimum support in percentage:")))/100)*len(transcations)
-min_confidence_value=int(input("Enter the minimum support confidence in percentage:"))
+def bruteforce():
+    print("Bruteforce Method")
+    for i in range(1,6):
+        transcation=database(str(i))
+        count=0 
+        combination_list=[]
+        values_support=[]
+        for j in range(getuniqeueelementslength(transcation)):
+            if count==0:
+                trimmed=generate_support(
+                    transcations=transcation,
+                    flag=j,
+                    trimmed_support=0
+                )
+                comb=combination(trimmed,combination_flag=j+2)
+                combination_list.append(comb)
+            else:
+                trimmed=generate_support(
+                transcations=transcation,
+                flag=j,
+                trimmed_support=combination_list[0])
+                comb=combination(trimmed,combination_flag=j+2)
+                combination_list.clear()
+                combination_list.append(comb)
+                print("\nAssocation rules:")
+                assocation_rules_bruteforce(trimmed_support=trimmed)
+            count+=1
 
-
-call_functions(transcations) 
+while(True):
+    print("Database list:")
+    print("1.Games\n2.Mangas\n3.Basic necessities\n4.Vegetables\n5.Fruits\n")
+    print("Which method do you want to apply on the databases")
+    print("1.Aprori Algorthim Method\n2 Bruteforce Method")
+    choice=int(input("Enter your choice:"))
+    if(choice==1):
+        start_time = time.time()
+        apriori()
+        end_time =  time.time()
+        print("Aprori Algorthim method took {} seconds".format(round(end_time-start_time,2)))
+    if choice==2:
+        start_time = time.time()
+        bruteforce() 
+        end_time =  time.time()
+        print("Bruteforce method took {} seconds".format(round(end_time-start_time,2)))
+    print("1.Repeat the above steps\n2.Exit")
+    exit=int(input("Enter your choice:"))
+    if exit==2:
+        break
