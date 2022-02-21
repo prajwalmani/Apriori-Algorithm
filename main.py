@@ -1,19 +1,8 @@
 from itertools import combinations,permutations
 import sqlite3
 
-
-transcations={
-    't1':['beer', 'bread', 'umbrella'],
-    't2':['milk', 'bread', 'detergent', 'water', 'umbrella', 'cheese'],
-    't3':["diaper", "water"],
-    't4':['cheese', 'water', 'milk', 'beer', 'detergent'],
-    't5':['bread', 'water', 'cheese', 'detergent']    
-
-}
-
-min_support_value=2
-min_confidence_value=70
 confidence_values=[]
+supports=[]
 
 def generate_support(transcations,flag,trimmed_support):
     support={}
@@ -45,6 +34,7 @@ def generate_support(transcations,flag,trimmed_support):
                         if set(i).issubset(set(invalue)):
                                 temp_item_support+=1
                                 support[i]=temp_item_support
+    printsupportvalue(support,flag,len(transcations))
     return support
 
 def trim_support(support):
@@ -89,6 +79,7 @@ def singlesupport(supportitem):
 def confidence(trimmed_support):
     confid={}
     confidence_values.clear()
+    supports.clear()
     for i in trimmed_support.keys():
         i=list(i)
         perm=list(permutations(i))
@@ -103,7 +94,9 @@ def confidence(trimmed_support):
                 unionupport=float((singlesupport(j)))
                 RHSsupport=float((singlesupport(j_duplicate)))
                 confidence_value=(unionupport/RHSsupport)*100
+
                 if confidence_value>=min_confidence_value:
+                    supports.append(j_duplicate+j[k:])
                     confid[str(j_duplicate)]=str(j[k:])
                     confidence_values.append(confidence_value)
     return confid
@@ -120,6 +113,7 @@ def call_functions(transcations):
     count=0 
     combination_list=[]
     confidences={}
+    values_support=[]
     uniqueelements=getuniqeueelementslength(transcations)
     for i in range(uniqueelements):
         if count==0:
@@ -128,6 +122,7 @@ def call_functions(transcations):
                 flag=i,
                 trimmed_support=0
             ))
+            
             comb=combination(trimmed,combination_flag=i+2)
             combination_list.append(comb)
         else:
@@ -141,17 +136,65 @@ def call_functions(transcations):
             combination_list.append(comb)
             confidences=confidence(trimmed)
             if bool(confidences)==False:
-                print("Thats all the transcations")
+                print("-----------------------------------------------------------")
+                print("There is no more frequent item set/assocation rules which is above the \nminumum supoort and confidence threshold")
+                print("-----------------------------------------------------------")
                 break
+            print("\nAssocation rules:")
+            values_support.clear()
+            for items in supports:
+                values_support.append(singlesupport(items)*100)
             for key,value in confidences.items():
                 index=list(confidences.keys()).index(key)
-                print("{}=>{}:{}%".format(key,value,round(confidence_values[index],2)))
+                print("{}=>{}:[Support:{}%, Confidence:{}%]".format(key,value,round(values_support[index],2),round(confidence_values[index],2)))
         count+=1
 
-# call_functions(transcations)
 
-def database():
-    con = sqlite3.connect('example.db')
+def database(database_number):
+    transcation={}
+    databasename="transcations"+database_number+".db"
+    con = sqlite3.connect(databasename)
+    cur=con.cursor()
+    res=cur.execute(
+    '''
+    select * from store;
+    '''
+    )
+    print("-----------------------------------------------------------")
+    print("Database items")
+    print("-----------------------------------------------------------")
+    for row in res:
+        print("{},{}".format(row[0],row[1]))
+        values_list=list(row[1].split(','))
+        values_list=[x.strip(' ') for x in values_list]
+        transcation[row[0]]=values_list
+    print("-----------------------------------------------------------")
+    con.commit()
+    con.close()
+
+    return transcation
+
+def printsupportvalue(support,buff,lentranscations):
+    print("-----------------------------------------------------------")
+    print("Itemset {}".format(buff+1))
+    print("-----------------------------------------------------------")
+    print("Support:")
+    for key,value in support.items():
+        print("{}:{}%".format(key,round((value/lentranscations)*100),2))
+        
 
 
-  
+print("Apriori Algorthim")
+print("Databases List")
+print("1.Games\n2.Mangas\n3.Basic necessities\n4.Vegetables\n5.Fruits\n")
+database_number=int(input("Enter your selection:"))
+if database_number<=0 or database_number>5:
+    print("Please enter the proper number associated to the database list")
+    database_number=int(input("Enter your selection:"))
+
+transcations=database(str(database_number))
+min_support_value=((int(input("Enter the minimum support in percentage:")))/100)*len(transcations)
+min_confidence_value=int(input("Enter the minimum support confidence in percentage:"))
+
+
+call_functions(transcations) 
