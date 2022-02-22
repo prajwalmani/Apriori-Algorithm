@@ -7,6 +7,11 @@ confidence_values=[]
 supports=[]
 
 def generate_support(transcations,flag,trimmed_support):
+    """
+    This function generates support values for the transactions by taking in three parameters transactions 
+    the actual database, flag is like buffer variable which is used to create condition-based code and support generation,
+    trimmed_support is the support from the previous iteration and returns a dict type with all the supports.
+    """
     support={}
     values=[]
     for key,value in transcations.items():
@@ -40,6 +45,11 @@ def generate_support(transcations,flag,trimmed_support):
     return support
 
 def trim_support(support,min_support_value):
+    """
+    This function trimes or delete all the supports which is less than the threshold. 
+    It has two parameters support that has the all support values from the previous iteration and min_support_value 
+    which is the user input and the threshold for the support.
+    """
     trim_support={}
     for key,value in support.items():
         if support[key]  >= min_support_value:
@@ -48,6 +58,10 @@ def trim_support(support,min_support_value):
 
 
 def combination(trim_support,combination_flag):
+    """
+    This function is used to combines the various items from the support value which passes the threshold 
+    and combination flag is the number of items should be combined.
+    """
     if combination_flag<=2:
         combination_list=list(combinations((trim_support.keys()),combination_flag))
         return combination_list
@@ -61,6 +75,10 @@ def combination(trim_support,combination_flag):
         return (combination_list)
 
 def singlesupport(supportitem,transcations):
+        """
+        This function is similar to the generate_support but this is used only to 
+        generate support for one item and the rest of the parameters are the same.
+        """
         support={}
         if not isinstance(supportitem, tuple):
             supportitem=tuple(supportitem)
@@ -79,6 +97,10 @@ def singlesupport(supportitem,transcations):
         
 
 def confidence(trimmed_support,min_confidence_value,transcations,conifdence_flag):
+    """
+     This function is used to give the confidence of each rule and trim the rules which doesnt 
+     pass the min_confidence_value It use permutations concept.
+    """
     confid={}
     confidence_values.clear()
     supports.clear()
@@ -108,6 +130,10 @@ def confidence(trimmed_support,min_confidence_value,transcations,conifdence_flag
     return confid
 
 def getuniqeueelementslength(transcations):
+    """
+    This function's main role is to get the unique elements in the 
+    entire database transaction and return the total length of it.
+    """
     unique=[]
     for inkey,invalue in transcations.items():
         for items in invalue:
@@ -116,6 +142,10 @@ def getuniqeueelementslength(transcations):
     return len(unique)
 
 def apriori_functions(transcations,min_support_value,min_confidence_value):
+    """
+    This function calls all other functions in the recursive main which acts as replication 
+    of the apriori algorithm and prints the association rules 
+    """
     count=0 
     combination_list=[]
     confidences={}
@@ -157,6 +187,10 @@ def apriori_functions(transcations,min_support_value,min_confidence_value):
 
 
 def database(database_number):
+    """
+    This is function is used to connect to the sqllite3 and access the database then the database 
+    is formatted in such an way that is similar to the datatypes used in python and easy to access  
+    """
     transcation={}
     databasename="transcations"+database_number+".db"
     con = sqlite3.connect(databasename)
@@ -181,6 +215,9 @@ def database(database_number):
     return transcation
 
 def printsupportvalue(support,buff,lentranscations):
+    """
+    This function just prints the support values with the itemset.
+    """
     print("-----------------------------------------------------------")
     print("Itemset {}".format(buff+1))
     print("-----------------------------------------------------------")
@@ -190,6 +227,9 @@ def printsupportvalue(support,buff,lentranscations):
         
 
 def apriori():
+    """
+    This function loops around all the databases and applies the apriori algorithm.
+    """
     print("Apriori Algorthim method:")
     min_support_value=(int(input("Enter the minimum support in percentage:")))
     min_confidence_value=int(input("Enter the minimum support confidence in percentage:"))
@@ -198,7 +238,10 @@ def apriori():
         min_support_value=(min_support_value/100)*len(transcations)
         apriori_functions(transcations,min_support_value,min_confidence_value) 
 
-def assocation_rules_bruteforce(trimmed_support):
+def rules_bruteforce(trimmed_support):
+    """
+    This function uses permutations concepts and prints rules
+    """
     for i in trimmed_support.keys():
         i=list(i)
         perm=list(permutations(i))
@@ -214,6 +257,9 @@ def assocation_rules_bruteforce(trimmed_support):
     
 
 def bruteforce():
+    """
+    This function calls other functions to replicate the Bruteforce.
+    """
     print("Bruteforce Method")
     for i in range(1,6):
         transcation=database(str(i))
@@ -238,12 +284,12 @@ def bruteforce():
                 combination_list.clear()
                 combination_list.append(comb)
                 print("\nAssocation rules:")
-                assocation_rules_bruteforce(trimmed_support=trimmed)
+                rules_bruteforce(trimmed_support=trimmed)
             count+=1
 
 while(True):
     print("Database list:")
-    print("1.Games\n2.Mangas\n3.Basic necessities\n4.Vegetables\n5.Fruits\n")
+    print("1.Games\n2.Manga\n3.necessities\n4.Vegetables\n5.Fruits\n")
     print("Which method do you want to apply on the databases")
     print("1.Aprori Algorthim Method\n2 Bruteforce Method")
     choice=int(input("Enter your choice:"))
