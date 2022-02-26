@@ -5,8 +5,9 @@ import time
 
 confidence_values=[]
 supports=[]
+global_support=0
 
-def generate_support(transcations,flag,trimmed_support):
+def generate_support(transcations,flag,trimmed_support,min_support):
     """
     This function generates support values for the transactions by taking in three parameters transactions 
     the actual database, flag is like buffer variable which is used to create condition-based code and support generation,
@@ -41,7 +42,7 @@ def generate_support(transcations,flag,trimmed_support):
                         if set(i).issubset(set(invalue)):
                                 temp_item_support+=1
                                 support[i]=temp_item_support
-    printsupportvalue(support,flag,len(transcations))
+    printsupportvalue(support,flag,len(transcations),min_support)
     return support
 
 def trim_support(support,min_support_value):
@@ -156,7 +157,7 @@ def apriori_functions(transcations,min_support_value,min_confidence_value):
             trimmed=trim_support(generate_support(
                 transcations=transcations,
                 flag=i,
-                trimmed_support=0
+                trimmed_support=0,min_support=min_support_value
             ),min_support_value)
             
             comb=combination(trimmed,combination_flag=i+2)
@@ -165,7 +166,7 @@ def apriori_functions(transcations,min_support_value,min_confidence_value):
             trimmed=trim_support(generate_support(
                 transcations=transcations,
                 flag=i,
-                trimmed_support=combination_list[0]
+                trimmed_support=combination_list[0],min_support=min_support_value
             ),min_support_value)
             comb=combination(trimmed,combination_flag=i+2)
             combination_list.clear()
@@ -214,7 +215,7 @@ def database(database_number):
 
     return transcation
 
-def printsupportvalue(support,buff,lentranscations):
+def printsupportvalue(support,buff,lentranscations,min_support):
     """
     This function just prints the support values with the itemset.
     """
@@ -223,7 +224,11 @@ def printsupportvalue(support,buff,lentranscations):
     print("-----------------------------------------------------------")
     print("Support:")
     for key,value in support.items():
-        print("{}:{}%".format(key,round((value/lentranscations)*100),2))
+        if value>=min_support:
+            support=round((value/lentranscations)*100,2)
+            print("{}:{}%".format(key,support))
+        else:
+            pass
         
 
 def apriori():
@@ -235,8 +240,8 @@ def apriori():
     min_confidence_value=int(input("Enter the minimum support confidence in percentage:"))
     for i in range(1,6):
         transcations=database(str(i))
-        min_support_value=(min_support_value/100)*len(transcations)
-        apriori_functions(transcations,min_support_value,min_confidence_value) 
+        min_support_values=(min_support_value/100)*len(transcations)
+        apriori_functions(transcations,min_support_values,min_confidence_value) 
 
 def rules_bruteforce(trimmed_support):
     """
@@ -271,7 +276,7 @@ def bruteforce():
                 trimmed=generate_support(
                     transcations=transcation,
                     flag=j,
-                    trimmed_support=0
+                    trimmed_support=0,min_support=0
                 )
                 comb=combination(trimmed,combination_flag=j+2)
                 combination_list.append(comb)
@@ -279,7 +284,7 @@ def bruteforce():
                 trimmed=generate_support(
                 transcations=transcation,
                 flag=j,
-                trimmed_support=combination_list[0])
+                trimmed_support=combination_list[0],min_support=0)
                 comb=combination(trimmed,combination_flag=j+2)
                 combination_list.clear()
                 combination_list.append(comb)
@@ -289,7 +294,7 @@ def bruteforce():
 
 while(True):
     print("Database list:")
-    print("1.Games\n2.Manga\n3.necessities\n4.Vegetables\n5.Fruits\n")
+    print("1.Games\n2.Manga\n3.Necessities\n4.Vegetables\n5.Fruits\n")
     print("Which method do you want to apply on the databases")
     print("1.Aprori Algorthim Method\n2 Bruteforce Method")
     choice=int(input("Enter your choice:"))
